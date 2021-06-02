@@ -5,13 +5,23 @@ use backroll::{
 use bevy_tasks::TaskPool;
 use bytemuck::{Pod, Zeroable};
 
-#[derive(Copy, Clone, PartialEq, Eq)]
-struct Input {}
+#[derive(Clone, Copy, PartialEq, Eq)]
+struct Input {
+    pub buttons: u8,
+}
 unsafe impl Zeroable for Input {}
 unsafe impl Pod for Input {}
 
+#[derive(Clone, Copy)]
+struct PlayerState {
+    pub y: u32,
+}
+
 #[derive(Clone)]
-struct State {}
+struct State {
+    /// Player index, state
+    pub players: [Option<PlayerState>; 2],
+}
 
 struct Config {}
 impl BackrollConfig for Config {
@@ -21,24 +31,48 @@ impl BackrollConfig for Config {
     const RECOMMENDATION_INTERVAL: u32 = 333; // seems to be unused
 }
 
+#[derive(Clone)]
+struct Player {
+    pub handle: BackrollPlayerHandle,
+    pub state: PlayerState,
+}
+
 struct Game {
-    pub local_player_handle: BackrollPlayerHandle,
+    pub players: [Option<Player>; 2],
 }
 
 impl SessionCallbacks<Config> for Game {
     fn save_state(&mut self) -> (State, Option<u64>) {
         // Create State object from current game state
-        let state = State {};
-        let hash = 0u64;
-        (state, Some(hash))
+        println!("save_state");
+        let mut player_states = [None; 2];
+        for (index, player_state) in self.players.iter().enumerate() {
+            if let Some(p) = player_state {
+                player_states[index] = Some(p.state);
+            }
+        }
+        let state = State {
+            players: player_states,
+        };
+        (state, None)
     }
 
     fn load_state(&mut self, state: State) {
         // Get game state from State object
+        for (index, player_state) in state.players.iter().enumerate() {
+            if let Some(player_state) = player_state {
+                self.players[index].as_mut().unwrap().state = player_state.clone();
+            }
+        }
     }
 
     fn advance_frame(&mut self, input: backroll::GameInput<Input>) {
-        let _input = input.get(self.local_player_handle).unwrap();
+        for player in self.players.iter_mut().filter_map(|p| p.as_mut()) {
+            let input = input.get(player.handle).unwrap();
+            if input.buttons & 1 != 0 {
+                player.state.y += 1;
+            }
+        }
     }
 
     fn handle_event(&mut self, event: backroll::BackrollEvent) {
@@ -48,15 +82,23 @@ impl SessionCallbacks<Config> for Game {
 
 fn main() -> BackrollResult<()> {
     let mut builder = P2PSessionBuilder::<Config>::new();
-    let local_player_handle = builder.add_player(BackrollPlayer::Local);
-    dbg!(local_player_handle);
+
+    let local_player = Player {
+        handle: builder.add_player(BackrollPlayer::Local),
+        state: PlayerState { y: 10 },
+    };
+
     let pool = TaskPool::new();
     let session = builder.start(pool).unwrap();
     let mut game = Game {
-        local_player_handle,
+        players: [Some(local_player), None],
     };
     loop {
-        session.add_local_input(local_player_handle, Input {})?;
+        dbg!(session.current_frame());
+        session.add_local_input(
+            game.players[0].as_ref().unwrap().handle,
+            Input { buttons: 0u8 },
+        )?;
         session.advance_frame(&mut game);
     }
 }
