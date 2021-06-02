@@ -8,7 +8,7 @@ mod view;
 #[structopt(name = "Backroll test")]
 struct Opts {
     /// Player numbers to run as.
-    #[structopt(name = "player_numbers")]
+    #[structopt(name = "player_numbers", default_value = "0")]
     player_numbers: Vec<usize>,
 }
 
