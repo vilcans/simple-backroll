@@ -113,6 +113,7 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 [[package]]
 name = "backroll"
 version = "0.1.0"
+source = "git+https://github.com/HouraiTeahouse/backroll-rs?rev=7d3a714fc5eec42804026d374aa4f8df29909f4c#7d3a714fc5eec42804026d374aa4f8df29909f4c"
 dependencies = [
  "async-channel",
  "backroll_transport",
@@ -132,6 +133,7 @@ dependencies = [
 [[package]]
 name = "backroll_transport"
 version = "0.1.1"
+source = "git+https://github.com/HouraiTeahouse/backroll-rs?rev=7d3a714fc5eec42804026d374aa4f8df29909f4c#7d3a714fc5eec42804026d374aa4f8df29909f4c"
 dependencies = [
  "async-channel",
  "dashmap",
@@ -140,6 +142,7 @@ dependencies = [
 [[package]]
 name = "backroll_transport_udp"
 version = "0.1.0"
+source = "git+https://github.com/HouraiTeahouse/backroll-rs?rev=7d3a714fc5eec42804026d374aa4f8df29909f4c#7d3a714fc5eec42804026d374aa4f8df29909f4c"
 dependencies = [
  "async-channel",
  "async-net",
@@ -349,19 +352,6 @@ dependencies = [
  "log",
  "regex",
  "termcolor",
-]
-
-[[package]]
-name = "evalback"
-version = "0.1.0"
-dependencies = [
- "backroll",
- "backroll_transport",
- "backroll_transport_udp",
- "bevy_tasks",
- "bytemuck",
- "minifb",
- "structopt",
 ]
 
 [[package]]
@@ -995,6 +985,19 @@ name = "shlex"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fdf1b9db47230893d76faad238fd6097fd6d6a9245cd7a4d90dbd639536bbd2"
+
+[[package]]
+name = "simple-backroll"
+version = "0.1.0"
+dependencies = [
+ "backroll",
+ "backroll_transport",
+ "backroll_transport_udp",
+ "bevy_tasks",
+ "bytemuck",
+ "minifb",
+ "structopt",
+]
 
 [[package]]
 name = "slab"

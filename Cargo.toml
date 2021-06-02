@@ -1,17 +1,25 @@
 [package]
-name = "evalback"
+name = "simple-backroll"
 version = "0.1.0"
-authors = ["Martin Vilcans <martin@resolutiongames.com>"]
+authors = ["Martin Vilcans <martin@librador.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-backroll = { path = "../backroll-rs/backroll" }
-backroll_transport_udp = { path = "../backroll-rs/backroll_transport_udp" }
-backroll_transport = { path = "../backroll-rs/backroll_transport" }
-
 bytemuck = "1.5.1"
 bevy_tasks = "0.5.0"
 minifb = "0.19.3"
 structopt = "0.3.21"
+
+[dependencies.backroll]
+git = "https://github.com/HouraiTeahouse/backroll-rs"
+rev = "7d3a714fc5eec42804026d374aa4f8df29909f4c"
+
+[dependencies.backroll_transport]
+git = "https://github.com/HouraiTeahouse/backroll-rs"
+rev = "7d3a714fc5eec42804026d374aa4f8df29909f4c"
+
+[dependencies.backroll_transport_udp]
+git = "https://github.com/HouraiTeahouse/backroll-rs"
+rev = "7d3a714fc5eec42804026d374aa4f8df29909f4c"
