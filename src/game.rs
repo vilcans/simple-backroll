@@ -117,7 +117,7 @@ pub fn play(local_player_number: usize) {
 
     let session = builder.start(pool).unwrap();
 
-    let mut view = View::new();
+    let mut view = View::new(&format!("Player {}", local_player_number));
 
     loop {
         if session.is_synchronized() {
