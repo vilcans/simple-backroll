@@ -2,7 +2,7 @@ extern crate minifb;
 
 use minifb::{Key, Window, WindowOptions};
 
-use crate::{Game, Player};
+use crate::game::{Game, Player};
 
 const WIDTH: usize = 640;
 const HEIGHT: usize = 360;
