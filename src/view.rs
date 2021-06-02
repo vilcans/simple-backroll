@@ -15,9 +15,7 @@ pub struct View {
 impl View {
     pub fn new() -> Self {
         let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
-        for (i, p) in buffer.iter_mut().enumerate() {
-            *p = 0x808080ff;
-        }
+        buffer.fill(0x808080);
 
         let window = Window::new(
             "Test - ESC to exit",
@@ -50,9 +48,8 @@ impl View {
             return false;
         }
 
-        for i in self.buffer.iter_mut() {
-            *i = 0;
-        }
+        self.buffer.fill(0x888888);
+
         for (index, p) in game.players.iter().enumerate() {
             if let Some(Player { state, .. }) = p {
                 let x = index * 20 + 10;
