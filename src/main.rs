@@ -7,6 +7,9 @@ mod view;
 #[derive(StructOpt)]
 #[structopt(name = "Backroll test")]
 struct Opts {
+    #[structopt(short = "n", name = "num_players", default_value = "2")]
+    num_players: usize,
+
     /// Player numbers to run as.
     #[structopt(name = "player_numbers", default_value = "0")]
     player_numbers: Vec<usize>,
@@ -14,6 +17,8 @@ struct Opts {
 
 fn main() {
     let opts = Opts::from_args();
+
+    let num_players = opts.num_players;
 
     let threads = opts
         .player_numbers
@@ -23,7 +28,7 @@ fn main() {
             thread::Builder::new()
                 .name(name)
                 .spawn(move || {
-                    game::play(player_number);
+                    game::play(num_players, player_number);
                 })
                 .unwrap()
         })

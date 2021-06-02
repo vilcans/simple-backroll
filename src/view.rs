@@ -46,13 +46,12 @@ impl View {
         self.buffer.fill(0x888888);
 
         for (index, p) in game.players.iter().enumerate() {
-            if let Some(Player { state, .. }) = p {
-                let x = index * 20 + 10;
-                let y = state.y;
-                for yoffs in 0..10 {
-                    let i = x + (y as usize + yoffs) * WIDTH as usize;
-                    self.buffer[i..i + 10].fill(0xffff00);
-                }
+            let Player { state, .. } = p;
+            let x = index * 20 + 10;
+            let y = state.y;
+            for yoffs in 0..10 {
+                let i = x + (y as usize + yoffs) * WIDTH as usize;
+                self.buffer[i..i + 10].fill(0xffff00);
             }
         }
 
