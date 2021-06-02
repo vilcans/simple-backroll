@@ -1,7 +1,5 @@
-use backroll::{
-    transport::Peer, BackrollConfig, BackrollPlayer, BackrollPlayerHandle, P2PSessionBuilder,
-    SessionCallbacks,
-};
+use backroll::{P2PSessionBuilder, SessionCallbacks};
+use backroll_transport_udp::{UdpConnectionConfig, UdpManager};
 use bevy_tasks::TaskPool;
 use bytemuck::{Pod, Zeroable};
 use std::thread;
@@ -28,7 +26,7 @@ struct State {
 }
 
 struct Config {}
-impl BackrollConfig for Config {
+impl backroll::Config for Config {
     type Input = Input;
     type State = State;
     const MAX_PLAYERS_PER_MATCH: usize = 8;
@@ -37,7 +35,7 @@ impl BackrollConfig for Config {
 
 #[derive(Clone)]
 struct Player {
-    pub handle: BackrollPlayerHandle,
+    pub handle: backroll::PlayerHandle,
     pub state: PlayerState,
 }
 
@@ -82,7 +80,7 @@ impl SessionCallbacks<Config> for Game {
         }
     }
 
-    fn handle_event(&mut self, event: backroll::BackrollEvent) {
+    fn handle_event(&mut self, event: backroll::Event) {
         dbg!(event);
     }
 }
@@ -108,12 +106,12 @@ fn play(local_player_number: usize) {
         let state = PlayerState { y: 10 };
         game.players[player_number] = if player_number == local_player_number {
             Some(Player {
-                handle: builder.add_player(BackrollPlayer::Local),
+                handle: builder.add_player(backroll::Player::Local),
                 state,
             })
         } else {
             Some(Player {
-                handle: builder.add_player(BackrollPlayer::Remote(remote_peer.clone())),
+                handle: builder.add_player(backroll::Player::Remote(remote_peer.clone())),
                 state,
             })
         }
