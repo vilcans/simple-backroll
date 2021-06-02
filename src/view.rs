@@ -17,7 +17,7 @@ impl View {
         let mut buffer: Vec<u32> = vec![0; WIDTH * HEIGHT];
         buffer.fill(0x808080);
 
-        let window = Window::new(
+        let mut window = Window::new(
             "Test - ESC to exit",
             WIDTH,
             HEIGHT,
@@ -27,7 +27,7 @@ impl View {
             panic!("{}", e);
         });
         // Limit to max ~60 fps update rate
-        //window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
+        window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
 
         Self { buffer, window }
     }
