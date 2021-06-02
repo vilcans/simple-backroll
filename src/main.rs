@@ -1,5 +1,5 @@
 use backroll::{
-    BackrollConfig, BackrollPlayer, BackrollPlayerHandle, BackrollResult, P2PSessionBuilder,
+    transport::Peer, BackrollConfig, BackrollPlayer, BackrollPlayerHandle, P2PSessionBuilder,
     SessionCallbacks,
 };
 use bevy_tasks::TaskPool;
@@ -48,7 +48,7 @@ struct Game {
 impl SessionCallbacks<Config> for Game {
     fn save_state(&mut self) -> (State, Option<u64>) {
         // Create State object from current game state
-        println!("save_state");
+        //println!("save_state");
         let mut player_states = [None; 2];
         for (index, player_state) in self.players.iter().enumerate() {
             if let Some(p) = player_state {
@@ -87,32 +87,48 @@ impl SessionCallbacks<Config> for Game {
     }
 }
 
-fn play() {
+fn play(peer: Peer, local_player_number: usize) {
     let mut builder = P2PSessionBuilder::<Config>::new();
 
-    let local_player = Player {
-        handle: builder.add_player(BackrollPlayer::Local),
-        state: PlayerState { y: 10 },
-    };
-
     let pool = TaskPool::new();
-    let session = builder.start(pool).unwrap();
     let mut game = Game {
-        players: [Some(local_player), None],
+        players: [None, None],
     };
+    let mut peer = Some(peer);
+    for player_number in 0usize..2 {
+        let state = PlayerState { y: 10 };
+        game.players[player_number] = if player_number == local_player_number {
+            Some(Player {
+                handle: builder.add_player(BackrollPlayer::Local),
+                state,
+            })
+        } else {
+            Some(Player {
+                handle: builder.add_player(BackrollPlayer::Remote(peer.take().unwrap())),
+                state,
+            })
+        }
+    }
+
+    let session = builder.start(pool).unwrap();
 
     let mut view = View::new();
 
     loop {
-        dbg!(session.current_frame());
-        session
-            .add_local_input(
-                game.players[0].as_ref().unwrap().handle,
-                Input {
-                    buttons: view.input(),
-                },
-            )
-            .unwrap();
+        if session.is_synchronized() {
+            session
+                .add_local_input(
+                    game.players[local_player_number].as_ref().unwrap().handle,
+                    Input {
+                        buttons: view.input(),
+                    },
+                )
+                .unwrap_or_else(|e| {
+                    println!("add_local_input failed: {}", e);
+                });
+        } else {
+            println!("Not synchronized yet");
+        }
         session.advance_frame(&mut game);
         if !view.update(&game) {
             break;
@@ -121,11 +137,12 @@ fn play() {
 }
 
 fn main() {
+    let (p0, p1) = Peer::create_bounded_pair(10);
     let t0 = thread::spawn(|| {
-        play();
+        play(p0, 0);
     });
     let t1 = thread::spawn(|| {
-        play();
+        play(p1, 1);
     });
     t0.join().unwrap();
     t1.join().unwrap();
