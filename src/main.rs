@@ -87,14 +87,23 @@ impl SessionCallbacks<Config> for Game {
     }
 }
 
-fn play(peer: Peer, local_player_number: usize) {
+fn play(local_player_number: usize) {
+    let pool = TaskPool::new();
+
+    let (local_host, remote_host) = if local_player_number == 0 {
+        ("127.0.0.1:7000", "127.0.0.1:7001")
+    } else {
+        ("127.0.0.1:7001", "127.0.0.1:7000")
+    };
+    let connection_manager = UdpManager::bind(pool.clone(), local_host).unwrap();
+    let connect_config = UdpConnectionConfig::unbounded(remote_host.parse().unwrap());
+    let remote_peer = connection_manager.connect(connect_config);
+
     let mut builder = P2PSessionBuilder::<Config>::new();
 
-    let pool = TaskPool::new();
     let mut game = Game {
         players: [None, None],
     };
-    let mut peer = Some(peer);
     for player_number in 0usize..2 {
         let state = PlayerState { y: 10 };
         game.players[player_number] = if player_number == local_player_number {
@@ -104,7 +113,7 @@ fn play(peer: Peer, local_player_number: usize) {
             })
         } else {
             Some(Player {
-                handle: builder.add_player(BackrollPlayer::Remote(peer.take().unwrap())),
+                handle: builder.add_player(BackrollPlayer::Remote(remote_peer.clone())),
                 state,
             })
         }
@@ -137,12 +146,11 @@ fn play(peer: Peer, local_player_number: usize) {
 }
 
 fn main() {
-    let (p0, p1) = Peer::create_bounded_pair(10);
     let t0 = thread::spawn(|| {
-        play(p0, 0);
+        play(0);
     });
     let t1 = thread::spawn(|| {
-        play(p1, 1);
+        play(1);
     });
     t0.join().unwrap();
     t1.join().unwrap();

@@ -8,6 +8,9 @@ edition = "2018"
 
 [dependencies]
 backroll = { path = "../backroll-rs/backroll" }
+backroll_transport_udp = { path = "../backroll-rs/backroll_transport_udp" }
+backroll_transport = { path = "../backroll-rs/backroll_transport" }
+
 bytemuck = "1.5.1"
 bevy_tasks = "0.5.0"
 minifb = "0.19.3"
