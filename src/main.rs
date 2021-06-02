@@ -123,6 +123,7 @@ fn play(local_player_number: usize) {
 
     loop {
         if session.is_synchronized() {
+            println!("Session is synchronized. Adding input.");
             session
                 .add_local_input(
                     game.players[local_player_number].as_ref().unwrap().handle,
@@ -130,8 +131,9 @@ fn play(local_player_number: usize) {
                         buttons: view.input(),
                     },
                 )
+                .map(|_| println!("add_local_input succeeded"))
                 .unwrap_or_else(|e| {
-                    println!("add_local_input failed: {}", e);
+                    println!("add_local_input failed: {:?}", e);
                 });
         } else {
             println!("Not synchronized yet");
