@@ -14,3 +14,4 @@ backroll_transport = { path = "../backroll-rs/backroll_transport" }
 bytemuck = "1.5.1"
 bevy_tasks = "0.5.0"
 minifb = "0.19.3"
+structopt = "0.3.21"

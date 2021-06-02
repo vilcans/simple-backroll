@@ -1,15 +1,35 @@
 use std::thread;
+use structopt::StructOpt;
 
 mod game;
 mod view;
 
+#[derive(StructOpt)]
+#[structopt(name = "Backroll test")]
+struct Opts {
+    /// Player numbers to run as.
+    #[structopt(name = "player_numbers")]
+    player_numbers: Vec<usize>,
+}
+
 fn main() {
-    let t0 = thread::spawn(|| {
-        game::play(0);
-    });
-    let t1 = thread::spawn(|| {
-        game::play(1);
-    });
-    t0.join().unwrap();
-    t1.join().unwrap();
+    let opts = Opts::from_args();
+
+    let threads = opts
+        .player_numbers
+        .iter()
+        .map(|&player_number| {
+            let name = format!("Player {}", player_number);
+            thread::Builder::new()
+                .name(name)
+                .spawn(move || {
+                    game::play(player_number);
+                })
+                .unwrap()
+        })
+        .collect::<Vec<_>>();
+
+    for t in threads {
+        t.join().unwrap();
+    }
 }
