@@ -5,6 +5,9 @@ use backroll::{
 use bevy_tasks::TaskPool;
 use bytemuck::{Pod, Zeroable};
 
+mod view;
+use view::View;
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct Input {
     pub buttons: u8,
@@ -70,6 +73,9 @@ impl SessionCallbacks<Config> for Game {
         for player in self.players.iter_mut().filter_map(|p| p.as_mut()) {
             let input = input.get(player.handle).unwrap();
             if input.buttons & 1 != 0 {
+                player.state.y -= 1;
+            }
+            if input.buttons & 2 != 0 {
                 player.state.y += 1;
             }
         }
@@ -93,12 +99,21 @@ fn main() -> BackrollResult<()> {
     let mut game = Game {
         players: [Some(local_player), None],
     };
+
+    let mut view = View::new();
+
     loop {
         dbg!(session.current_frame());
         session.add_local_input(
             game.players[0].as_ref().unwrap().handle,
-            Input { buttons: 0u8 },
+            Input {
+                buttons: view.input(),
+            },
         )?;
         session.advance_frame(&mut game);
+        if !view.update(&game) {
+            break;
+        }
     }
+    Ok(())
 }
