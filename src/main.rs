@@ -4,6 +4,7 @@ use backroll::{
 };
 use bevy_tasks::TaskPool;
 use bytemuck::{Pod, Zeroable};
+use std::thread;
 
 mod view;
 use view::View;
@@ -86,7 +87,7 @@ impl SessionCallbacks<Config> for Game {
     }
 }
 
-fn main() -> BackrollResult<()> {
+fn play() {
     let mut builder = P2PSessionBuilder::<Config>::new();
 
     let local_player = Player {
@@ -104,16 +105,28 @@ fn main() -> BackrollResult<()> {
 
     loop {
         dbg!(session.current_frame());
-        session.add_local_input(
-            game.players[0].as_ref().unwrap().handle,
-            Input {
-                buttons: view.input(),
-            },
-        )?;
+        session
+            .add_local_input(
+                game.players[0].as_ref().unwrap().handle,
+                Input {
+                    buttons: view.input(),
+                },
+            )
+            .unwrap();
         session.advance_frame(&mut game);
         if !view.update(&game) {
             break;
         }
     }
-    Ok(())
+}
+
+fn main() {
+    let t0 = thread::spawn(|| {
+        play();
+    });
+    let t1 = thread::spawn(|| {
+        play();
+    });
+    t0.join().unwrap();
+    t1.join().unwrap();
 }
