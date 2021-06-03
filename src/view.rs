@@ -4,8 +4,8 @@ use minifb::{Key, Window, WindowOptions};
 
 use crate::game::{Game, Player};
 
-const WIDTH: usize = 640;
-const HEIGHT: usize = 360;
+const WIDTH: usize = 320;
+const HEIGHT: usize = 200;
 
 pub struct View {
     buffer: Vec<u32>,
