@@ -34,7 +34,8 @@ fn main() {
         })
         .collect::<Vec<_>>();
 
-    for t in threads {
-        t.join().unwrap();
+    for (num, t) in threads.into_iter().enumerate() {
+        t.join()
+            .unwrap_or_else(|e| println!("Failed to join thread {}: {:?}", num, e));
     }
 }
