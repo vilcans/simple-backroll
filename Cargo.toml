@@ -14,12 +14,12 @@ structopt = "0.3.21"
 
 [dependencies.backroll]
 git = "https://github.com/HouraiTeahouse/backroll-rs"
-rev = "7d3a714fc5eec42804026d374aa4f8df29909f4c"
+rev = "fb28865d738904564daf6d9dfaa9b52356a727d3"
 
 [dependencies.backroll_transport]
 git = "https://github.com/HouraiTeahouse/backroll-rs"
-rev = "7d3a714fc5eec42804026d374aa4f8df29909f4c"
+rev = "fb28865d738904564daf6d9dfaa9b52356a727d3"
 
 [dependencies.backroll_transport_udp]
 git = "https://github.com/HouraiTeahouse/backroll-rs"
-rev = "7d3a714fc5eec42804026d374aa4f8df29909f4c"
+rev = "fb28865d738904564daf6d9dfaa9b52356a727d3"
