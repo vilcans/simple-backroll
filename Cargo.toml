@@ -12,14 +12,6 @@ bevy_tasks = "0.5.0"
 minifb = "0.19.3"
 structopt = "0.3.21"
 
-[dependencies.backroll]
-git = "https://github.com/HouraiTeahouse/backroll-rs"
-rev = "7d3a714fc5eec42804026d374aa4f8df29909f4c"
-
-[dependencies.backroll_transport]
-git = "https://github.com/HouraiTeahouse/backroll-rs"
-rev = "7d3a714fc5eec42804026d374aa4f8df29909f4c"
-
-[dependencies.backroll_transport_udp]
-git = "https://github.com/HouraiTeahouse/backroll-rs"
-rev = "7d3a714fc5eec42804026d374aa4f8df29909f4c"
+backroll = {path = "C:/Users/sraya/OneDrive/Documents/GitHub/backroll-rs/backroll"}
+backroll_transport = {path = "C:/Users/sraya/OneDrive/Documents/GitHub/backroll-rs/backroll_transport"}
+backroll_transport_udp = {path = "C:/Users/sraya/OneDrive/Documents/GitHub/backroll-rs/backroll_transport_udp"}

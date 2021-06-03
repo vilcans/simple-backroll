@@ -1,4 +1,4 @@
-use backroll::{P2PSessionBuilder, SessionCallbacks};
+use backroll::{Command, Event, P2PSessionBuilder};
 use backroll_transport_udp::{UdpConnectionConfig, UdpManager};
 use bevy_tasks::TaskPool;
 use bytemuck::{Pod, Zeroable};
@@ -38,46 +38,69 @@ pub struct Player {
 
 pub struct Game {
     pub players: Vec<Player>,
+    pub time_sync_frames: u8,
 }
 
-impl SessionCallbacks<Config> for Game {
-    fn save_state(&mut self) -> (State, Option<u64>) {
-        // Create State object from current game state
-        //println!("save_state");
-        let player_states = self.players.iter().map(|p| p.state).collect();
-        let state = State {
-            players: player_states,
-        };
-        (state, None)
-    }
-
-    fn load_state(&mut self, state: State) {
-        // Get game state from State object
-        for (s, d) in state.players.iter().zip(self.players.iter_mut()) {
-            d.state = s.clone();
-        }
-    }
-
-    fn advance_frame(&mut self, input: backroll::GameInput<Input>) {
-        for player in self.players.iter_mut() {
-            let input = input.get(player.handle).unwrap();
-            if input.buttons & 1 != 0 {
-                player.state.y -= 1;
+impl Game {
+    fn run_command(&mut self, command: backroll::Command<Config>) {
+        match command {
+            Command::Save(save_state) => {
+                // Create State object from current game state
+                //println!("save_state");
+                let player_states = self.players.iter().map(|p| p.state).collect();
+                let state = State {
+                    players: player_states,
+                };
+                save_state.save(state, None);
             }
-            if input.buttons & 2 != 0 {
-                player.state.y += 1;
+            Command::Load(load_state) => {
+                // Get game state from State object
+                for (s, d) in load_state
+                    .load()
+                    .players
+                    .iter()
+                    .zip(self.players.iter_mut())
+                {
+                    d.state = s.clone();
+                }
+            }
+            Command::AdvanceFrame(inputs) => {
+                for player in self.players.iter_mut() {
+                    let input = inputs.get(player.handle).unwrap();
+                    if input.buttons & 1 != 0 {
+                        if player.state.y > 0 {
+                            player.state.y -= 1;
+                        }
+                    }
+                    if input.buttons & 2 != 0 {
+                        player.state.y += 1;
+                    }
+                }
+            }
+            Command::Event(event) => {
+                match event {
+                    // this is to prevent jittering reset of game state
+                    Event::TimeSync { frames_ahead } => {
+                        self.time_sync_frames = frames_ahead;
+                        println!(
+                            "Time syncs frames are {} frames ahead",
+                            self.time_sync_frames
+                        );
+                    }
+                    _ => {}
+                }
             }
         }
-    }
-
-    fn handle_event(&mut self, event: backroll::Event) {
-        dbg!(event);
     }
 }
 
 fn host_for_player(player_number: usize) -> String {
     format!("127.0.0.1:{}", 7000 + player_number)
 }
+
+/*
+    TODO: Whenever there is a ReachedPredictionBarrier error, it leads to a desync. Current guess is that inputs from remote player are skipped.
+*/
 
 pub fn play(num_players: usize, local_player_number: usize) {
     let pool = TaskPool::new();
@@ -101,30 +124,51 @@ pub fn play(num_players: usize, local_player_number: usize) {
             Player { handle, state }
         })
         .collect();
-    let mut game = Game { players };
+    let mut game = Game {
+        players,
+        time_sync_frames: 0,
+    };
 
     let session = builder.start(pool).unwrap();
 
     let mut view = View::new(&format!("Player {}", local_player_number));
 
     loop {
+        for command in session.poll() {
+            game.run_command(command);
+        }
+        if game.time_sync_frames > 0 {
+            if !view.update(&game) {
+                break;
+            }
+            game.time_sync_frames -= 1;
+            continue;
+        }
         if session.is_synchronized() {
             println!("Session is synchronized. Adding input.");
-            session
-                .add_local_input(
-                    game.players[local_player_number].handle,
-                    Input {
-                        buttons: view.input(),
-                    },
-                )
-                .map(|_| println!("add_local_input succeeded"))
-                .unwrap_or_else(|e| {
-                    println!("add_local_input failed: {:?}", e);
-                });
+            /*.map(|_| println!("add_local_input succeeded"))
+            .unwrap_or_else(|e| {
+                println!("add_local_input failed: {:?}", e);
+            });
+            */
+            match session.add_local_input(
+                game.players[local_player_number].handle,
+                Input {
+                    buttons: view.input(),
+                },
+            ) {
+                Ok(()) => {}
+                Err(err) => {
+                    println!("add_local_input failed: {:?}", err);
+                    continue;
+                }
+            }
         } else {
             println!("Not synchronized yet");
         }
-        session.advance_frame(&mut game);
+        for command in session.advance_frame() {
+            game.run_command(command);
+        }
         if !view.update(&game) {
             break;
         }
