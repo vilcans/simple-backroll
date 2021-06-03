@@ -133,6 +133,7 @@ pub fn play(num_players: usize, local_player_number: usize) {
 
     let mut view = View::new(&format!("Player {}", local_player_number));
 
+    let mut was_synchronized = None;
     loop {
         for command in session.poll() {
             game.run_command(command);
@@ -144,13 +145,18 @@ pub fn play(num_players: usize, local_player_number: usize) {
             game.time_sync_frames -= 1;
             continue;
         }
-        if session.is_synchronized() {
-            println!("Session is synchronized. Adding input.");
-            /*.map(|_| println!("add_local_input succeeded"))
-            .unwrap_or_else(|e| {
-                println!("add_local_input failed: {:?}", e);
-            });
-            */
+
+        let is_synchronized = session.is_synchronized();
+        if was_synchronized.map_or(false, |s| s != is_synchronized) {
+            if is_synchronized {
+                println!("Session is now synchronized.");
+            } else {
+                println!("Session is not synchronized.");
+            }
+        }
+        was_synchronized = Some(is_synchronized);
+
+        if is_synchronized {
             match session.add_local_input(
                 game.players[local_player_number].handle,
                 Input {
