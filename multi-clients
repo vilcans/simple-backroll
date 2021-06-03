@@ -1,0 +1,17 @@
+#!/bin/bash -e
+
+cargo build --release
+
+if [ "$1" == "" ]
+then
+    echo "Usage:"
+    echo "$0: number_of_clients"
+    exit 1
+fi
+
+count=$1
+
+for i in $(seq 0 $((count - 1)))
+do
+    target/release/simple-backroll -n $count $i &
+done
