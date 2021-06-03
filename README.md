@@ -20,4 +20,6 @@ You can specify the number of players with the `-n` argument, so for single-play
 
     cargo run -- -n 1
 
-Single player is the only mode that works right now. Use arrow keys up and down to move.
+Instead of running all clients in one process, create a more realistic simulation with the multi-client script. E.g. to run 3 client processes:
+
+    ./multi-clients 3
