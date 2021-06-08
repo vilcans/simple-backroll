@@ -5,12 +5,11 @@ use bytemuck::{Pod, Zeroable};
 
 use crate::view::View;
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[repr(C)]
+#[derive(Clone, Copy, Zeroable, Pod, PartialEq, Eq, Debug)]
 struct Input {
     pub buttons: u8,
 }
-unsafe impl Zeroable for Input {}
-unsafe impl Pod for Input {}
 
 #[derive(Clone, Copy, Hash)]
 pub struct PlayerState {
