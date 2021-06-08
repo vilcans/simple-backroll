@@ -115,7 +115,7 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 [[package]]
 name = "backroll"
 version = "0.1.0"
-source = "git+https://github.com/HouraiTeahouse/backroll-rs?rev=fb28865d738904564daf6d9dfaa9b52356a727d3#fb28865d738904564daf6d9dfaa9b52356a727d3"
+source = "git+https://github.com/HouraiTeahouse/backroll-rs?rev=6e9e2ddbbc54b88668ebf29d8805c4945030fbe5#6e9e2ddbbc54b88668ebf29d8805c4945030fbe5"
 dependencies = [
  "async-channel",
  "backroll_transport",
@@ -127,6 +127,7 @@ dependencies = [
  "parking_lot",
  "rand",
  "serde",
+ "smallvec",
  "thiserror",
  "tracing",
  "varinteger",
@@ -135,7 +136,7 @@ dependencies = [
 [[package]]
 name = "backroll_transport"
 version = "0.1.1"
-source = "git+https://github.com/HouraiTeahouse/backroll-rs?rev=fb28865d738904564daf6d9dfaa9b52356a727d3#fb28865d738904564daf6d9dfaa9b52356a727d3"
+source = "git+https://github.com/HouraiTeahouse/backroll-rs?rev=6e9e2ddbbc54b88668ebf29d8805c4945030fbe5#6e9e2ddbbc54b88668ebf29d8805c4945030fbe5"
 dependencies = [
  "async-channel",
  "dashmap",
@@ -144,7 +145,7 @@ dependencies = [
 [[package]]
 name = "backroll_transport_udp"
 version = "0.1.0"
-source = "git+https://github.com/HouraiTeahouse/backroll-rs?rev=fb28865d738904564daf6d9dfaa9b52356a727d3#fb28865d738904564daf6d9dfaa9b52356a727d3"
+source = "git+https://github.com/HouraiTeahouse/backroll-rs?rev=6e9e2ddbbc54b88668ebf29d8805c4945030fbe5#6e9e2ddbbc54b88668ebf29d8805c4945030fbe5"
 dependencies = [
  "async-channel",
  "async-net",
