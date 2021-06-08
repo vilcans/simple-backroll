@@ -1,23 +1,22 @@
-use backroll::{Command, Event, P2PSessionBuilder};
+use backroll::{command::Command, Event, P2PSessionBuilder};
 use backroll_transport_udp::{UdpConnectionConfig, UdpManager};
 use bevy_tasks::TaskPool;
 use bytemuck::{Pod, Zeroable};
 
 use crate::view::View;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+#[derive(Clone, Copy, Zeroable, Pod, PartialEq, Eq, Debug)]
 struct Input {
     pub buttons: u8,
 }
-unsafe impl Zeroable for Input {}
-unsafe impl Pod for Input {}
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Hash)]
 pub struct PlayerState {
     pub y: u32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 struct State {
     pub players: Vec<PlayerState>,
 }
@@ -26,14 +25,13 @@ struct Config {}
 impl backroll::Config for Config {
     type Input = Input;
     type State = State;
-    const MAX_PLAYERS_PER_MATCH: usize = 8;
-    const RECOMMENDATION_INTERVAL: u32 = 333; // seems to be unused
 }
 
 #[derive(Clone)]
 pub struct Player {
     pub handle: backroll::PlayerHandle,
     pub state: PlayerState,
+    last_input: Input,
 }
 
 pub struct Game {
@@ -42,18 +40,19 @@ pub struct Game {
 }
 
 impl Game {
-    fn run_command(&mut self, command: backroll::Command<Config>) {
+    fn run_command(&mut self, command: Command<Config>) {
         match command {
             Command::Save(save_state) => {
+                // println!("Save State");
                 // Create State object from current game state
-                //println!("save_state");
                 let player_states = self.players.iter().map(|p| p.state).collect();
                 let state = State {
                     players: player_states,
                 };
-                save_state.save(state, None);
+                save_state.save(state);
             }
             Command::Load(load_state) => {
+                // println!("Load State");
                 // Get game state from State object
                 for (s, d) in load_state
                     .load()
@@ -65,8 +64,17 @@ impl Game {
                 }
             }
             Command::AdvanceFrame(inputs) => {
+                // println!("Advance frame {}", inputs.frame);
                 for player in self.players.iter_mut() {
                     let input = inputs.get(player.handle).unwrap();
+                    if *input != player.last_input {
+                        println!("{:?} Input for player {:?}: {:?} (Frame: {})", 
+                            std::thread::current().id(), 
+                            player.handle, 
+                            input,
+                            inputs.frame,
+                        );
+                    }
                     if input.buttons & 1 != 0 {
                         if player.state.y > 0 {
                             player.state.y -= 1;
@@ -75,15 +83,22 @@ impl Game {
                     if input.buttons & 2 != 0 {
                         player.state.y += 1;
                     }
+                    player.last_input = *input;
                 }
             }
             Command::Event(event) => {
                 match event {
                     // this is to prevent jittering reset of game state
+                    Event::Synchronized(remote) => {
+                        println!("Synchronized with {:?}", remote);
+                    },
+                    Event::Running => {
+                        println!("Synchronized with all remote players.");
+                    },
                     Event::TimeSync { frames_ahead } => {
                         self.time_sync_frames = frames_ahead;
                         println!(
-                            "Time syncs frames are {} frames ahead",
+                            "We are {} frames ahead of the remotes. Stalling.",
                             self.time_sync_frames
                         );
                     }
@@ -121,7 +136,7 @@ pub fn play(num_players: usize, local_player_number: usize) {
                 let remote_peer = connection_manager.connect(connect_config);
                 builder.add_player(backroll::Player::Remote(remote_peer))
             };
-            Player { handle, state }
+            Player { handle, state, last_input: Zeroable::zeroed() }
         })
         .collect();
     let mut game = Game {
@@ -130,51 +145,43 @@ pub fn play(num_players: usize, local_player_number: usize) {
     };
 
     let session = builder.start(pool).unwrap();
+    for player in game.players.iter() {
+        session.set_frame_delay(player.handle, 3);
+    }
 
     let mut view = View::new(&format!("Player {}", local_player_number));
 
-    let mut was_synchronized = None;
     loop {
         for command in session.poll() {
             game.run_command(command);
         }
+
         if game.time_sync_frames > 0 {
             if !view.update(&game) {
                 break;
             }
             game.time_sync_frames -= 1;
+            println!("Time Sync: Stalling frame {}", game.time_sync_frames);
             continue;
         }
 
-        let is_synchronized = session.is_synchronized();
-        if was_synchronized.map_or(false, |s| s != is_synchronized) {
-            if is_synchronized {
-                println!("Session is now synchronized.");
-            } else {
-                println!("Session is not synchronized.");
+        match session.add_local_input(
+            game.players[local_player_number].handle,
+            Input {
+                buttons: view.input(),
+            },
+        ) {
+            Ok(()) => {}
+            Err(err) => {
+                // println!("add_local_input failed: {:?}", err);
+                continue;
             }
         }
-        was_synchronized = Some(is_synchronized);
 
-        if is_synchronized {
-            match session.add_local_input(
-                game.players[local_player_number].handle,
-                Input {
-                    buttons: view.input(),
-                },
-            ) {
-                Ok(()) => {}
-                Err(err) => {
-                    println!("add_local_input failed: {:?}", err);
-                    continue;
-                }
-            }
-        } else {
-            println!("Not synchronized yet");
-        }
         for command in session.advance_frame() {
             game.run_command(command);
         }
+
         if !view.update(&game) {
             break;
         }

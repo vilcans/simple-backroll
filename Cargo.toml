@@ -7,19 +7,19 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bytemuck = "1.5.1"
+bytemuck = { version = "1.5.1", features = ["derive"] }
 bevy_tasks = "0.5.0"
 minifb = "0.19.3"
 structopt = "0.3.21"
 
 [dependencies.backroll]
 git = "https://github.com/HouraiTeahouse/backroll-rs"
-rev = "fb28865d738904564daf6d9dfaa9b52356a727d3"
+rev = "6e9e2ddbbc54b88668ebf29d8805c4945030fbe5"
 
 [dependencies.backroll_transport]
 git = "https://github.com/HouraiTeahouse/backroll-rs"
-rev = "fb28865d738904564daf6d9dfaa9b52356a727d3"
+rev = "6e9e2ddbbc54b88668ebf29d8805c4945030fbe5"
 
 [dependencies.backroll_transport_udp]
 git = "https://github.com/HouraiTeahouse/backroll-rs"
-rev = "fb28865d738904564daf6d9dfaa9b52356a727d3"
+rev = "6e9e2ddbbc54b88668ebf29d8805c4945030fbe5"
